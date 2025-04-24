@@ -1,4 +1,4 @@
-package com.amongus.bot.game;
+package com.amongus.bot.game.states;
 
 import com.amongus.bot.core.AmongUsBot;
 import com.amongus.bot.models.Player;

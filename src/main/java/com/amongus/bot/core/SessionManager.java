@@ -1,6 +1,6 @@
 package com.amongus.bot.core;
 
-import com.amongus.bot.game.GameSession;
+import com.amongus.bot.game.states.GameSession;
 import com.amongus.bot.game.lobby.GameLobby;
 import com.amongus.bot.models.Config;
 import com.amongus.bot.models.Player;
@@ -246,4 +246,56 @@ public class SessionManager {
             session.startGame(bot);
         }
     }
+
+    /**
+     * Завершает игровую сессию с указанным кодом лобби.
+     * Может быть вызван администратором для принудительного завершения игры
+     * или автоматически при выполнении условий победы.
+     *
+     * @param lobbyCode Код лобби, игру которого нужно завершить
+     * @param bot Экземпляр бота для отправки сообщений
+     */
+    public void endGame(String lobbyCode, AmongUsBot bot) {
+        // Проверяем, существует ли сессия с указанным кодом
+        GameSession session = activeSessions.get(lobbyCode);
+        if (session == null) {
+            log.warn("Попытка завершить несуществующую игровую сессию: {}", lobbyCode);
+            return;
+        }
+
+        try {
+            // Определяем победившую команду
+            Optional<String> winningTeamOpt = session.checkWinConditions();
+            String winningTeam = winningTeamOpt.orElse("unknown");
+
+            // Переводим игру в состояние завершения
+            session.endGame(winningTeam, bot);
+
+            // Уведомляем всех игроков
+            String endMessage = "Игра окончена!";
+            if (winningTeamOpt.isPresent()) {
+                if (winningTeam.equals("crewmates")) {
+                    endMessage += " Победа членов экипажа!";
+                } else if (winningTeam.equals("impostors")) {
+                    endMessage += " Победа предателей!";
+                }
+            } else {
+                endMessage += " Игра была принудительно завершена администратором.";
+            }
+
+            for (Player player : session.getPlayers()) {
+                String finalEndMessage = endMessage;
+                session.getPlayerChatId(player.getUserId()).ifPresent(chatId -> {
+                    bot.sendTextMessageSafe(chatId, finalEndMessage);
+                });
+            }
+
+            // Удаляем сессию из активных
+            activeSessions.remove(lobbyCode);
+            log.info("Игровая сессия {} завершена и удалена", lobbyCode);
+        } catch (Exception e) {
+            log.error("Ошибка при завершении игровой сессии {}: {}", lobbyCode, e.getMessage(), e);
+        }
+    }
+
 } 

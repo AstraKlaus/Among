@@ -1,10 +1,9 @@
-package com.amongus.bot.game;
+package com.amongus.bot.game.states;
 
 import com.amongus.bot.core.AmongUsBot;
 import com.amongus.bot.models.Player;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 
 /**
  * Interface representing a state in the game state machine.

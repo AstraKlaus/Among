@@ -2,7 +2,7 @@ package com.amongus.bot.handlers;
 
 import com.amongus.bot.core.AmongUsBot;
 import com.amongus.bot.core.SessionManager;
-import com.amongus.bot.game.GameSession;
+import com.amongus.bot.game.states.GameSession;
 import com.amongus.bot.models.Player;
 import com.amongus.bot.utils.SecurityManager;
 import org.slf4j.Logger;

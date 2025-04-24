@@ -58,7 +58,7 @@ public class CommandHandler {
         registerCommand(new StartGameCommand(bot, sessionManager, securityManager));
         
         // Information commands
-        registerCommand(new HelpCommand(bot, sessionManager, securityManager));
+        registerCommand(new HelpCommand(bot, sessionManager, commands));
         registerCommand(new PlayersCommand(bot, sessionManager, securityManager));
         registerCommand(new RulesCommand(bot, sessionManager, securityManager));
         
@@ -255,7 +255,7 @@ public class CommandHandler {
             lobbyOpt.ifPresent(lobby -> {
                 for (Player p : lobby.getPlayers()) {
                     if (p.getUserId() != player.getUserId()) {
-                        Optional<String> playerChatId = sessionManager.getPlayerChatId(p.getUserId());
+                        Optional<String> playerChatId = Optional.ofNullable(sessionManager.getPlayerChatId(p.getUserId()));
                         playerChatId.ifPresent(pcid -> {
                             SendMessage notifyMessage = new SendMessage();
                             notifyMessage.setChatId(pcid);
@@ -330,7 +330,7 @@ public class CommandHandler {
                 // Notify other players
                 for (Player otherPlayer : lobby.getPlayers()) {
                     if (otherPlayer.getUserId() != player.getUserId()) {
-                        Optional<String> playerChatId = sessionManager.getPlayerChatId(otherPlayer.getUserId());
+                        Optional<String> playerChatId = Optional.ofNullable(sessionManager.getPlayerChatId(otherPlayer.getUserId()));
                         playerChatId.ifPresent(pcid -> {
                             SendMessage notifyMessage = new SendMessage();
                             notifyMessage.setChatId(pcid);
@@ -345,7 +345,7 @@ public class CommandHandler {
                 if (lobby.areAllPlayersReady() && lobby.getPlayers().size() >= Config.MIN_PLAYERS) {
                     // Send game starting message to all players
                     for (Player readyPlayer : lobby.getPlayers()) {
-                        Optional<String> playerChatId = sessionManager.getPlayerChatId(readyPlayer.getUserId());
+                        Optional<String> playerChatId = Optional.ofNullable(sessionManager.getPlayerChatId(readyPlayer.getUserId()));
                         playerChatId.ifPresent(pcid -> {
                             SendMessage startMessage = new SendMessage();
                             startMessage.setChatId(pcid);
@@ -355,7 +355,7 @@ public class CommandHandler {
                     }
                     
                     // Start the game
-                    sessionManager.startGame(lobby.getLobbyCode());
+                    sessionManager.startGame(lobby.getLobbyCode(), bot);
                 }
             }
         } else {

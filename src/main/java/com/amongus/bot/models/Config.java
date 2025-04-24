@@ -6,8 +6,8 @@ package com.amongus.bot.models;
 public class Config {
 
     // Bot credentials - should be loaded from environment variables in production
-    public static final String BOT_USERNAME = "your_bot_username_here";
-    public static final String BOT_TOKEN = "your_bot_token_here";
+    public static final String BOT_USERNAME = "AmongFriendsBot";
+    public static final String BOT_TOKEN = "6377918744:AAHwoekZyuMRuu36rLpNotVg1QaomCFP5a0";
 
     // Game settings
     public static final int MIN_PLAYERS = 4;

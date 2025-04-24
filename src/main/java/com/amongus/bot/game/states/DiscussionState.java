@@ -1,14 +1,11 @@
-package com.amongus.bot.game;
+package com.amongus.bot.game.states;
 
 import com.amongus.bot.core.AmongUsBot;
 import com.amongus.bot.models.Player;
 import com.amongus.bot.game.voting.VotingManager;
 import com.amongus.bot.game.voting.VotingResults;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
