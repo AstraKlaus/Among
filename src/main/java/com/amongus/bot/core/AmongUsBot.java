@@ -212,4 +212,9 @@ public class AmongUsBot extends TelegramLongPollingBot {
     public SecurityManager getSecurityManager() {
         return securityManager;
     }
-} 
+
+
+    public ScheduledExecutorService getScheduler() {
+        return scheduler;
+    }
+}

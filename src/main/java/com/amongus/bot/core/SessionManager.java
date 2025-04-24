@@ -120,7 +120,11 @@ public class SessionManager {
         
         return Optional.ofNullable(lobbies.get(lobbyCode));
     }
-    
+
+    public Optional<GameSession> getSessionByLobbyCode(String lobbyCode) {
+        return Optional.ofNullable(activeSessions.get(lobbyCode));
+    }
+
     /**
      * Retrieves a lobby by its code.
      */
@@ -240,11 +244,14 @@ public class SessionManager {
     }
 
     // Добавить метод startGame
-    public void startGame(String sessionId, AmongUsBot bot) {
-        GameSession session = activeSessions.get(sessionId);
-        if (session != null) {
-            session.startGame(bot);
+    public void startGame(String lobbyCode, AmongUsBot bot) {
+        log.info("Attempting to start game for lobby: {}", lobbyCode);
+        GameSession session = activeSessions.get(lobbyCode);
+        if (session == null) {
+            log.error("Game session not found for lobby: {}", lobbyCode);
+            return;
         }
+        session.startGame(bot);
     }
 
     /**
@@ -298,4 +305,7 @@ public class SessionManager {
         }
     }
 
-} 
+    public Map<String, GameSession> getActiveSessions() {
+        return activeSessions;
+    }
+}

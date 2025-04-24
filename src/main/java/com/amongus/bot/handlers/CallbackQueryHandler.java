@@ -133,27 +133,37 @@ public class CallbackQueryHandler {
                 bot.sendTextMessageSafe(chatId, "❌ Только владелец лобби может изменять настройки.");
             }
         } else if (data.equals("start_game")) {
-            // Новый код для кнопки "Начать игру"
             if (lobby.isOwner(userId)) {
                 if (lobby.getPlayers().size() < Config.MIN_PLAYERS) {
                     bot.sendTextMessageSafe(chatId, "❌ Недостаточно игроков для начала игры. Минимальное количество: " + Config.MIN_PLAYERS);
                     return;
                 }
-
-                // Отправляем всем игрокам уведомление о начале игры
+                if (lobby.isGameStarted()) {
+                    bot.sendTextMessageSafe(chatId, "Игра уже запущена!");
+                    return;
+                }
+                // Получаем или создаём GameSession
+                Optional<GameSession> sessionOpt = sessionManager.getSessionByLobbyCode(lobby.getLobbyCode());
+                GameSession session;
+                if (sessionOpt.isPresent()) {
+                    session = sessionOpt.get();
+                } else {
+                    session = new GameSession(lobby.getLobbyCode(), lobby.getOwner(), bot.getScheduler(), bot.getSecurityManager());
+                    for (Player p : lobby.getPlayers()) session.addPlayer(p);
+                    sessionManager.getActiveSessions().put(lobby.getLobbyCode(), session);
+                }
+                session.startGame(bot);
+                lobby.setGameStarted(true);
                 for (Player p : lobby.getPlayers()) {
                     String pChatId = sessionManager.getPlayerChatId(p.getUserId());
                     if (pChatId != null) {
-                        bot.sendTextMessageSafe(pChatId, "🚀 Владелец лобби запустил игру! Игра начинается...");
+                        bot.sendTextMessageSafe(pChatId, "🚀 Игра началась! Проверьте вашу роль в личных сообщениях.");
                     }
                 }
-
-                // Запускаем игру
-                sessionManager.startGame(lobby.getLobbyCode(), bot);
             } else {
                 bot.sendTextMessageSafe(chatId, "❌ Только владелец лобби может запустить игру.");
             }
-        } else if (data.startsWith("settings_")) {
+    } else if (data.startsWith("settings_")) {
             handleSettingsCallback(lobby, callbackQuery, data);
         }
     }

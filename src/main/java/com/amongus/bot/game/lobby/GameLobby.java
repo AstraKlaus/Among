@@ -1,15 +1,17 @@
 package com.amongus.bot.game.lobby;
 
+import com.amongus.bot.core.AmongUsBot;
+import com.amongus.bot.core.SessionManager;
+import com.amongus.bot.game.roles.Crewmate;
+import com.amongus.bot.game.roles.Impostor;
 import com.amongus.bot.models.Config;
 import com.amongus.bot.models.GameSettings;
 import com.amongus.bot.models.Player;
+import com.amongus.bot.utils.SecurityManager;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -25,7 +27,10 @@ public class GameLobby {
     private final GameSettings settings = new GameSettings();
     private final Map<Long, Integer> playerStatusMessageIds = new ConcurrentHashMap<>();
     private boolean gameInProgress = false;
-    
+    private boolean gameStarted = false;
+    public boolean isGameStarted() { return gameStarted; }
+
+
     /**
      * Creates a new game lobby with the specified owner.
      */
@@ -135,7 +140,41 @@ public class GameLobby {
         
         return sb.toString();
     }
-    
+
+    public void startGame(AmongUsBot bot, SessionManager sessionManager) {
+        // 1. Снимаем флаги "готов"
+        for (Player player : players) {
+            player.setReady(false);
+        }
+
+        // 2. Распределяем роли
+        int impostorCount = settings.getImpostorCount();
+        List<Player> shuffled = new ArrayList<>(players);
+        Collections.shuffle(shuffled);
+        for (int i = 0; i < shuffled.size(); i++) {
+            if (i < impostorCount) {
+                shuffled.get(i).setRole(new Impostor(bot.getSecurityManager()));
+            } else {
+                shuffled.get(i).setRole(new Crewmate(bot.getSecurityManager()));
+            }
+        }
+
+        // 3. Отправляем приватные сообщения с ролью
+        for (Player player : players) {
+            String chatId = sessionManager.getPlayerChatId(player.getUserId());
+            if (chatId != null) {
+                String msg = player.getRole() instanceof Impostor
+                        ? "🔪 Ваша роль: *Импостер*"
+                        : "👨‍🚀 Ваша роль: *Мирный житель*";
+                bot.sendTextMessageSafe(chatId, msg);
+            }
+        }
+
+        // 4. Устанавливаем флаг, что игра запущена
+        this.gameStarted = true;
+    }
+
+
     /**
      * Records activity in the lobby.
      */
