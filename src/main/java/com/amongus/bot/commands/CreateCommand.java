@@ -78,6 +78,14 @@ public class CreateCommand extends BaseCommand {
         readyButton.setCallbackData("ready");
         row.add(readyButton);
         keyboard.add(row);
+
+        List<InlineKeyboardButton> settingsRow = new ArrayList<>();
+        InlineKeyboardButton settingsButton = new InlineKeyboardButton();
+        settingsButton.setText("⚙️ Настройки");
+        settingsButton.setCallbackData("settings");
+        settingsRow.add(settingsButton);
+        keyboard.add(settingsRow);
+
         markup.setKeyboard(keyboard);
 
         // Отправляем приветственное сообщение

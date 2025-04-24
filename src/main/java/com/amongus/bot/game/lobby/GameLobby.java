@@ -8,7 +8,9 @@ import lombok.Data;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a game lobby where players gather before starting a game.
@@ -21,6 +23,7 @@ public class GameLobby {
     private final Instant creationTime;
     private Instant lastActivityTime;
     private final GameSettings settings = new GameSettings();
+    private final Map<Long, Integer> playerStatusMessageIds = new ConcurrentHashMap<>();
     private boolean gameInProgress = false;
     
     /**
@@ -145,5 +148,13 @@ public class GameLobby {
      */
     public long getInactiveMinutes(Instant now) {
         return (now.getEpochSecond() - lastActivityTime.getEpochSecond()) / 60;
+    }
+
+    public void setStatusMessageId(long userId, Integer messageId) {
+        playerStatusMessageIds.put(userId, messageId);
+    }
+
+    public Integer getStatusMessageId(long userId) {
+        return playerStatusMessageIds.get(userId);
     }
 } 
