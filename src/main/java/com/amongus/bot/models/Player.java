@@ -21,6 +21,7 @@ public class Player {
     private final String username;
     private final String firstName;
     private final String lastName;
+    private long chatId;
     
     // Game state
     private Role role;
@@ -217,5 +218,13 @@ public class Player {
      */
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public void setChatId(long chatId) {
+        this.chatId = chatId;
+    }
+
+    public long getChatId() {
+        return chatId;
     }
 } 

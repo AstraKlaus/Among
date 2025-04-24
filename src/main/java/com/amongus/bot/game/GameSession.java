@@ -158,6 +158,11 @@ public class GameSession {
                 .filter(p -> p.getUserId() == userId)
                 .findFirst();
     }
+
+    public Player getPlayerById(long userId) {
+        Optional<Player> playerOpt = getPlayer(userId);
+        return playerOpt.orElse(null);
+    }
     
     /**
      * Sets the player's chat ID for sending direct messages.

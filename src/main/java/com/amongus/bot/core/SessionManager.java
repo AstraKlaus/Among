@@ -224,10 +224,10 @@ public class SessionManager {
         return null;
     }
 
-    public void updatePlayerChatId(long userId, long chatId) {
+    public void updatePlayerChatId(long userId, String chatId) {
         Player player = getPlayer(userId);
         if (player != null) {
-            player.setChatId(chatId);
+            player.setChatId(Long.parseLong(chatId));
         }
     }
 
@@ -240,10 +240,10 @@ public class SessionManager {
     }
 
     // Добавить метод startGame
-    public void startGame(String sessionId) {
+    public void startGame(String sessionId, AmongUsBot bot) {
         GameSession session = activeSessions.get(sessionId);
         if (session != null) {
-            session.startGame();
+            session.startGame(bot);
         }
     }
 } 
