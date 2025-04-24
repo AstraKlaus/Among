@@ -12,8 +12,10 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.io.Serializable;
@@ -128,6 +130,57 @@ public class AmongUsBot extends TelegramLongPollingBot {
             }, secondsToLive, TimeUnit.SECONDS);
         } catch (TelegramApiException e) {
             log.error("Failed to send temporary message: {}", e.getMessage(), e);
+        }
+    }
+
+    public Integer sendMessageWithReturnIdSafe(String chatId, String text, InlineKeyboardMarkup markup) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(text);
+        message.enableMarkdown(true);
+        message.setReplyMarkup(markup);
+        try {
+            return execute(message).getMessageId();
+        } catch (TelegramApiException e) {
+            log.error("Failed to send message", e);
+            return null;
+        }
+    }
+
+    public boolean editMessageTextSafe(String chatId, Integer messageId, String text, InlineKeyboardMarkup markup) {
+        EditMessageText edit = new EditMessageText();
+        edit.setChatId(chatId);
+        edit.setMessageId(messageId);
+        edit.setText(text);
+        edit.enableMarkdown(true);
+        edit.setReplyMarkup(markup);
+        try {
+            execute(edit);
+            return true;
+        } catch (TelegramApiException e) {
+            log.error("Failed to edit message", e);
+            return false;
+        }
+    }
+
+    /**
+     * Safely sends a text message and returns the message ID.
+     * Used for messages that need to be tracked for later editing.
+     *
+     * @param chatId The chat ID to send the message to
+     * @param text The text to send
+     * @return The message ID of the sent message, or null if sending failed
+     */
+    public Integer sendTextMessageWithReturnIdSafe(String chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText(text);
+        message.enableMarkdown(true);
+        try {
+            return execute(message).getMessageId();
+        } catch (TelegramApiException e) {
+            log.error("Failed to send message", e);
+            return null;
         }
     }
 

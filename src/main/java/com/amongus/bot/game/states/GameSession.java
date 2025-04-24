@@ -43,6 +43,7 @@ public class GameSession {
     // Player management
     private final List<Player> players = new ArrayList<>();
     private final Map<Long, String> playerChatIds = new ConcurrentHashMap<>();
+    private final Map<Long, Integer> playerStatusMessageIds = new ConcurrentHashMap<>();
     
     // Game components
     private final TaskManager taskManager;
@@ -102,7 +103,16 @@ public class GameSession {
     public boolean isGameInProgress() {
         return gameStartTime != null;
     }
-    
+
+    public void setStatusMessageId(long userId, Integer messageId) {
+        playerStatusMessageIds.put(userId, messageId);
+    }
+
+    public Integer getStatusMessageId(long userId) {
+        return playerStatusMessageIds.get(userId);
+    }
+
+
     /**
      * Adds a player to the game.
      */

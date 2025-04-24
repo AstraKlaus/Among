@@ -217,49 +217,57 @@ public class LobbyState extends BaseGameState {
     /**
      * Sends player status to a specific player.
      */
+    // В LobbyState.java, метод sendPlayerStatusToPlayer нужно изменить:
     private void sendPlayerStatusToPlayer(GameSession gameSession, AmongUsBot bot, Player player) {
         gameSession.getPlayerChatId(player.getUserId()).ifPresent(chatId -> {
             StringBuilder sb = new StringBuilder();
-            
             sb.append("👥 *Игроки* (").append(gameSession.getPlayers().size()).append("/").append(Config.MAX_PLAYERS).append("):\n");
-            
             for (Player p : gameSession.getPlayers()) {
                 String readyStatus = p.isReady() ? "✅" : "⬜";
                 String ownerLabel = gameSession.isOwner(p.getUserId()) ? " 👑" : "";
-                
                 sb.append(readyStatus).append(" ")
                         .append(p.getDisplayName())
                         .append(ownerLabel)
                         .append("\n");
             }
-            
-            // Add ready button if player is not ready
+
+            // Получаем текущий ID сообщения из gameSession
+            Integer statusMessageId = gameSession.getStatusMessageId(player.getUserId());
+
+            // Добавить кнопку "Готов" если игрок не готов
             if (!player.isReady()) {
                 InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
                 List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-                
                 List<InlineKeyboardButton> row = new ArrayList<>();
                 InlineKeyboardButton readyButton = new InlineKeyboardButton();
                 readyButton.setText("Готов");
                 readyButton.setCallbackData("ready");
                 row.add(readyButton);
-                
                 keyboard.add(row);
                 markup.setKeyboard(keyboard);
-                
-                SendMessage message = new SendMessage();
-                message.setChatId(chatId);
-                message.setText(sb.toString());
-                message.enableMarkdown(true);
-                message.setReplyMarkup(markup);
-                
-                bot.sendMessageSafe(message);
+
+                if (statusMessageId != null) {
+                    // Редактируем существующее сообщение
+                    bot.editMessageTextSafe(chatId, statusMessageId, sb.toString(), markup);
+                } else {
+                    // Отправляем новое сообщение и сохраняем его ID
+                    Integer newMessageId = bot.sendMessageWithReturnIdSafe(chatId, sb.toString(), markup);
+                    gameSession.setStatusMessageId(player.getUserId(), newMessageId);
+                }
             } else {
-                bot.sendTextMessageSafe(chatId, sb.toString());
+                if (statusMessageId != null) {
+                    // Редактируем существующее сообщение
+                    bot.editMessageTextSafe(chatId, statusMessageId, sb.toString(), null);
+                } else {
+                    // Отправляем сообщение без кнопки
+                    Integer newMessageId = bot.sendTextMessageWithReturnIdSafe(chatId, sb.toString());
+                    gameSession.setStatusMessageId(player.getUserId(), newMessageId);
+                }
             }
         });
     }
-    
+
+
     /**
      * Sends settings to all players.
      */
@@ -362,4 +370,5 @@ public class LobbyState extends BaseGameState {
         markup.setKeyboard(keyboard);
         return markup;
     }
+
 } 
