@@ -2,7 +2,7 @@ package com.amongus.bot.handlers;
 
 import com.amongus.bot.commands.*;
 import com.amongus.bot.core.AmongUsBot;
-import com.amongus.bot.core.GameSession;
+import com.amongus.bot.commands.*;
 import com.amongus.bot.core.SessionManager;
 import com.amongus.bot.game.lobby.GameLobby;
 import com.amongus.bot.models.Config;
@@ -42,7 +42,6 @@ public class CommandHandler {
         this.bot = bot;
         this.sessionManager = sessionManager;
         this.securityManager = securityManager;
-        
         // Initialize commands
         this.commands = new HashMap<>();
         registerCommands();

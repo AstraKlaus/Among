@@ -33,6 +33,11 @@ public class Crewmate implements Role {
     public String getDescription() {
         return "Ваша задача - выполнить все задания и обнаружить импостеров.";
     }
+
+    @Override
+    public String getName() {
+        return "Член экипажа";
+    }
     
     @Override
     public boolean isImpostor() {

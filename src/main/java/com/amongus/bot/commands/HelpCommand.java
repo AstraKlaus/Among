@@ -1,7 +1,7 @@
 package com.amongus.bot.commands;
 
-import com.amongus.bot.AmongUsBot;
-import com.amongus.bot.session.SessionManager;
+import com.amongus.bot.core.AmongUsBot;
+import com.amongus.bot.core.SessionManager;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -87,4 +87,18 @@ public class HelpCommand extends BaseCommand {
     public String getDescription() {
         return "Displays a list of available commands and their descriptions.";
     }
+
+    @Override
+    public void execute(Message message, String[] args) {
+        // Реализация метода
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(message.getChatId().toString());
+        sendMessage.setText("Справка по командам бота:\n" +
+                "/create - создать новое лобби\n" +
+                "/join [код] - присоединиться к лобби\n" +
+                "/start - начать игру\n" +
+                "/leave - покинуть лобби");
+        execute(sendMessage);
+    }
+
 } 

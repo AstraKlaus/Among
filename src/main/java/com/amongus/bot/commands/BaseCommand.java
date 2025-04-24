@@ -1,7 +1,7 @@
 package com.amongus.bot.commands;
 
-import com.amongus.bot.AmongUsBot;
-import com.amongus.bot.session.SessionManager;
+import com.amongus.bot.core.AmongUsBot;
+import com.amongus.bot.core.SessionManager;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -23,6 +23,14 @@ public abstract class BaseCommand implements Command {
     public BaseCommand(AmongUsBot bot, SessionManager sessionManager) {
         this.bot = bot;
         this.sessionManager = sessionManager;
+    }
+
+    protected void execute(SendMessage sendMessage) {
+        try {
+            bot.execute(sendMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

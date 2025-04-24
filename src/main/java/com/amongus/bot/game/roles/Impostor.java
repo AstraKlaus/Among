@@ -34,7 +34,12 @@ public class Impostor implements Role {
     public String getDescription() {
         return "Ваша задача - убить всех членов экипажа, оставаясь незамеченным.";
     }
-    
+
+    @Override
+    public String getName() {
+        return "Предатель";
+    }
+
     @Override
     public boolean isImpostor() {
         return true;

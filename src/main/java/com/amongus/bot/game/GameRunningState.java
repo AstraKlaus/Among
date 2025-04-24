@@ -292,7 +292,7 @@ public class GameRunningState extends BaseGameState {
     private void showPlayersToKill(GameSession gameSession, AmongUsBot bot, Player player) {
         gameSession.getPlayerChatId(player.getUserId()).ifPresent(chatId -> {
             // Check kill cooldown
-            if (!player.canKill()) {
+            if (!player.canKill(java.time.Instant.now())) {
                 bot.sendTextMessageSafe(chatId, "⏳ Перезарядка способности убийства. Попробуйте позже.");
                 return;
             }

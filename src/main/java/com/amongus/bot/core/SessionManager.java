@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +20,9 @@ import java.util.stream.Collectors;
  */
 public class SessionManager {
     private static final Logger log = LoggerFactory.getLogger(SessionManager.class);
-    
+
+    private Map<String, GameSession> activeSessions = new HashMap<>();
+
     // Map of lobby codes to GameLobby instances
     private final Map<String, GameLobby> lobbies = new ConcurrentHashMap<>();
     
@@ -209,5 +212,38 @@ public class SessionManager {
         return activeSessions.values().stream()
                 .filter(session -> session.getPlayer(userId).isPresent())
                 .findFirst();
+    }
+
+    public Player getPlayer(long userId) {
+        for (GameSession session : activeSessions.values()) {
+            Player player = session.getPlayerById(userId);
+            if (player != null) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    public void updatePlayerChatId(long userId, long chatId) {
+        Player player = getPlayer(userId);
+        if (player != null) {
+            player.setChatId(chatId);
+        }
+    }
+
+    public String getPlayerChatId(long userId) {
+        Player player = getPlayer(userId);
+        if (player != null) {
+            return String.valueOf(player.getChatId());
+        }
+        return null;
+    }
+
+    // Добавить метод startGame
+    public void startGame(String sessionId) {
+        GameSession session = activeSessions.get(sessionId);
+        if (session != null) {
+            session.startGame();
+        }
     }
 } 

@@ -16,6 +16,7 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.Serializable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -133,14 +134,11 @@ public class AmongUsBot extends TelegramLongPollingBot {
     /**
      * Execute any Telegram API method safely.
      */
-    public <T extends BotApiMethod<?>> T executeSafe(T method) {
-        try {
-            return execute(method);
-        } catch (TelegramApiException e) {
-            log.error("Failed to execute method {}: {}", method.getClass().getSimpleName(), e.getMessage(), e);
-            return null;
-        }
+    @Override
+    public <T extends Serializable, Method extends BotApiMethod<T>> T execute(Method method) throws TelegramApiException {
+        return super.execute(method);
     }
+
 
     /**
      * Gets the security manager for this bot.
