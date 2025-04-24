@@ -132,6 +132,27 @@ public class CallbackQueryHandler {
             } else {
                 bot.sendTextMessageSafe(chatId, "❌ Только владелец лобби может изменять настройки.");
             }
+        } else if (data.equals("start_game")) {
+            // Новый код для кнопки "Начать игру"
+            if (lobby.isOwner(userId)) {
+                if (lobby.getPlayers().size() < Config.MIN_PLAYERS) {
+                    bot.sendTextMessageSafe(chatId, "❌ Недостаточно игроков для начала игры. Минимальное количество: " + Config.MIN_PLAYERS);
+                    return;
+                }
+
+                // Отправляем всем игрокам уведомление о начале игры
+                for (Player p : lobby.getPlayers()) {
+                    String pChatId = sessionManager.getPlayerChatId(p.getUserId());
+                    if (pChatId != null) {
+                        bot.sendTextMessageSafe(pChatId, "🚀 Владелец лобби запустил игру! Игра начинается...");
+                    }
+                }
+
+                // Запускаем игру
+                sessionManager.startGame(lobby.getLobbyCode(), bot);
+            } else {
+                bot.sendTextMessageSafe(chatId, "❌ Только владелец лобби может запустить игру.");
+            }
         } else if (data.startsWith("settings_")) {
             handleSettingsCallback(lobby, callbackQuery, data);
         }
@@ -161,50 +182,79 @@ public class CallbackQueryHandler {
         Integer statusMessageId = lobby.getStatusMessageId(player.getUserId());
 
         // Создаем клавиатуру
-        InlineKeyboardMarkup markup = null;
-        if (!player.isReady()) {
-            markup = new InlineKeyboardMarkup();
-            List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-            // Кнопка "Готов"
+        // Кнопка "Готов" если игрок не готов
+        if (!player.isReady()) {
             List<InlineKeyboardButton> readyRow = new ArrayList<>();
             InlineKeyboardButton readyButton = new InlineKeyboardButton();
             readyButton.setText("Готов");
             readyButton.setCallbackData("ready");
             readyRow.add(readyButton);
             keyboard.add(readyRow);
-
-            // Если игрок - владелец, добавляем кнопку настроек
-            if (lobby.isOwner(player.getUserId())) {
-                List<InlineKeyboardButton> settingsRow = new ArrayList<>();
-                InlineKeyboardButton settingsButton = new InlineKeyboardButton();
-                settingsButton.setText("⚙️ Настройки");
-                settingsButton.setCallbackData("settings");
-                settingsRow.add(settingsButton);
-                keyboard.add(settingsRow);
-            }
-
-            markup.setKeyboard(keyboard);
         }
 
-        if (statusMessageId != null) {
-            // Редактируем существующее сообщение
-            boolean success = bot.editMessageTextSafe(chatId, statusMessageId, sb.toString(), markup);
-            if (!success) {
-                // Если редактирование не удалось, отправляем новое сообщение
+        // Если игрок - владелец, добавляем кнопки настроек и запуска игры
+        if (lobby.isOwner(player.getUserId())) {
+            // Кнопка настроек
+            List<InlineKeyboardButton> settingsRow = new ArrayList<>();
+            InlineKeyboardButton settingsButton = new InlineKeyboardButton();
+            settingsButton.setText("⚙️ Настройки");
+            settingsButton.setCallbackData("settings");
+            settingsRow.add(settingsButton);
+            keyboard.add(settingsRow);
+
+            // Кнопка запуска игры
+            List<InlineKeyboardButton> startGameRow = new ArrayList<>();
+            InlineKeyboardButton startGameButton = new InlineKeyboardButton();
+            startGameButton.setText("🚀 Начать игру");
+            startGameButton.setCallbackData("start_game");
+            startGameRow.add(startGameButton);
+            keyboard.add(startGameRow);
+        }
+
+        markup.setKeyboard(keyboard);
+
+        // Если ни одна кнопка не добавлена, установим null для клавиатуры
+        if (keyboard.isEmpty()) {
+            markup = null;
+        }
+
+        try {
+            if (statusMessageId != null) {
+                // Редактируем существующее сообщение
+                try {
+                    EditMessageText editMessage = new EditMessageText();
+                    editMessage.setChatId(chatId);
+                    editMessage.setMessageId(statusMessageId);
+                    editMessage.setText(sb.toString());
+                    editMessage.enableMarkdown(true);
+                    editMessage.setReplyMarkup(markup);
+                    bot.execute(editMessage);
+                } catch (TelegramApiException e) {
+                    // Если редактирование не удалось, отправляем новое сообщение
+                    Integer newMessageId = markup != null
+                            ? bot.sendMessageWithReturnIdSafe(chatId, sb.toString(), markup)
+                            : bot.sendTextMessageWithReturnIdSafe(chatId, sb.toString());
+                    if (newMessageId != null) {
+                        lobby.setStatusMessageId(player.getUserId(), newMessageId);
+                    }
+                }
+            } else {
+                // Отправляем новое сообщение и сохраняем его ID
                 Integer newMessageId = markup != null
                         ? bot.sendMessageWithReturnIdSafe(chatId, sb.toString(), markup)
                         : bot.sendTextMessageWithReturnIdSafe(chatId, sb.toString());
-                lobby.setStatusMessageId(player.getUserId(), newMessageId);
+                if (newMessageId != null) {
+                    lobby.setStatusMessageId(player.getUserId(), newMessageId);
+                }
             }
-        } else {
-            // Отправляем новое сообщение и сохраняем его ID
-            Integer newMessageId = markup != null
-                    ? bot.sendMessageWithReturnIdSafe(chatId, sb.toString(), markup)
-                    : bot.sendTextMessageWithReturnIdSafe(chatId, sb.toString());
-            lobby.setStatusMessageId(player.getUserId(), newMessageId);
+        } catch (Exception e) {
+            log.error("Error updating player status: " + e.getMessage(), e);
         }
     }
+
 
     /**
      * Создает клавиатуру настроек для лобби
@@ -457,19 +507,29 @@ public class CallbackQueryHandler {
             keyboard.add(readyRow);
         }
 
-        // Если игрок - владелец, добавляем кнопку настроек
+        // Если игрок - владелец, добавляем кнопки настроек и запуска игры
         if (lobby.isOwner(player.getUserId())) {
+            // Кнопка настроек
             List<InlineKeyboardButton> settingsRow = new ArrayList<>();
             InlineKeyboardButton settingsButton = new InlineKeyboardButton();
             settingsButton.setText("⚙️ Настройки");
             settingsButton.setCallbackData("settings");
             settingsRow.add(settingsButton);
             keyboard.add(settingsRow);
+
+            // Кнопка запуска игры
+            List<InlineKeyboardButton> startGameRow = new ArrayList<>();
+            InlineKeyboardButton startGameButton = new InlineKeyboardButton();
+            startGameButton.setText("🚀 Начать игру");
+            startGameButton.setCallbackData("start_game");
+            startGameRow.add(startGameButton);
+            keyboard.add(startGameRow);
         }
 
         markup.setKeyboard(keyboard);
         return markup;
     }
+
 
     /**
      * Handles general callback queries not related to a specific game session.
