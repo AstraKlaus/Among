@@ -157,7 +157,9 @@ public class CallbackQueryHandler {
                 for (Player p : lobby.getPlayers()) {
                     String pChatId = sessionManager.getPlayerChatId(p.getUserId());
                     if (pChatId != null) {
+                        log.info("Sending start message to {}", pChatId);
                         bot.sendTextMessageSafe(pChatId, "🚀 Игра началась! Проверьте вашу роль в личных сообщениях.");
+                        log.info("Sent start message to {}", pChatId);
                     }
                 }
             } else {

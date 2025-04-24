@@ -229,17 +229,25 @@ public class SessionManager {
     }
 
     public void updatePlayerChatId(long userId, String chatId) {
+        log.info("Updating chat ID for user {} to {}", userId, chatId);
         Player player = getPlayer(userId);
         if (player != null) {
             player.setChatId(Long.parseLong(chatId));
+        } else {
+            log.warn("Player with ID {} not found when updating chatId", userId);
         }
     }
 
     public String getPlayerChatId(long userId) {
         Player player = getPlayer(userId);
         if (player != null) {
-            return String.valueOf(player.getChatId());
+            long chatIdLong = player.getChatId();
+            if (chatIdLong == 0) {
+                log.warn("ChatId for player {} is 0!", userId);
+            }
+            return String.valueOf(chatIdLong);
         }
+        log.warn("No player found for userId {} when getting chatId", userId);
         return null;
     }
 

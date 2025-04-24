@@ -9,6 +9,8 @@ import com.amongus.bot.models.GameSettings;
 import com.amongus.bot.models.Player;
 import com.amongus.bot.utils.SecurityManager;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.*;
@@ -28,6 +30,7 @@ public class GameLobby {
     private final Map<Long, Integer> playerStatusMessageIds = new ConcurrentHashMap<>();
     private boolean gameInProgress = false;
     private boolean gameStarted = false;
+    private final Logger log = LoggerFactory.getLogger(GameLobby.class);
     public boolean isGameStarted() { return gameStarted; }
 
 
@@ -162,11 +165,13 @@ public class GameLobby {
         // 3. Отправляем приватные сообщения с ролью
         for (Player player : players) {
             String chatId = sessionManager.getPlayerChatId(player.getUserId());
-            if (chatId != null) {
+            if (chatId != null && !chatId.equals("0")) {
                 String msg = player.getRole() instanceof Impostor
                         ? "🔪 Ваша роль: *Импостер*"
                         : "👨‍🚀 Ваша роль: *Мирный житель*";
                 bot.sendTextMessageSafe(chatId, msg);
+            } else {
+                log.warn("Cannot send role message to player {}: invalid chatId", player.getDisplayName());
             }
         }
 

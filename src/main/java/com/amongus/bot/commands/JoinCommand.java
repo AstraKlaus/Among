@@ -44,7 +44,7 @@ public class JoinCommand extends BaseCommand {
 
     @Override
     public void execute(Message message, String args) {
-        String chatId = message.getChatId().toString();
+        String chatId = String.valueOf(message.getFrom().getId());
         User telegramUser = message.getFrom();
 
         if (args.isEmpty()) {
