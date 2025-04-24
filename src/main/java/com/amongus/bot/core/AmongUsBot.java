@@ -184,6 +184,17 @@ public class AmongUsBot extends TelegramLongPollingBot {
         }
     }
 
+    public boolean deleteMessage(String chatId, Integer messageId) {
+        DeleteMessage deleteMessage = new DeleteMessage(chatId, messageId);
+        try {
+            execute(deleteMessage);
+            return true;
+        } catch (TelegramApiException e) {
+            log.error("Failed to delete message", e);
+            return false;
+        }
+    }
+
     /**
      * Execute any Telegram API method safely.
      */

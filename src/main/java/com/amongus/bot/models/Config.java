@@ -10,7 +10,7 @@ public class Config {
     public static final String BOT_TOKEN = "6377918744:AAHwoekZyuMRuu36rLpNotVg1QaomCFP5a0";
 
     // Game settings
-    public static final int MIN_PLAYERS = 4;
+    public static final int MIN_PLAYERS = 2;
     public static final int MAX_PLAYERS = 10;
     public static final int DEFAULT_IMPOSTOR_COUNT = 1;
     public static final int MIN_IMPOSTOR_COUNT = 1;

@@ -221,8 +221,8 @@ public class CallbackQueryHandler {
         impostorRow.add(impostorMinus);
 
         InlineKeyboardButton impostorCount = new InlineKeyboardButton();
-        impostorCount.setText("Импостеры: " + lobby.getSettings().getImpostorCount());
-        impostorCount.setCallbackData("settings_impostor_info");
+        impostorCount.setText("Импостеры: " + lobby.getSettings().getImpostorCount() + " →");
+        impostorCount.setCallbackData("settings_next");
         impostorRow.add(impostorCount);
 
         InlineKeyboardButton impostorPlus = new InlineKeyboardButton();
@@ -231,8 +231,77 @@ public class CallbackQueryHandler {
         impostorRow.add(impostorPlus);
         keyboard.add(impostorRow);
 
-        // Добавление других настроек (время обсуждения, голосования и т.д.)
-        // ...
+        // Время обсуждения
+        List<InlineKeyboardButton> discussionRow = new ArrayList<>();
+        InlineKeyboardButton discussionMinus = new InlineKeyboardButton();
+        discussionMinus.setText("➖");
+        discussionMinus.setCallbackData("settings_discussion_minus");
+        discussionRow.add(discussionMinus);
+
+        InlineKeyboardButton discussionTime = new InlineKeyboardButton();
+        discussionTime.setText("Обсуждение: " + lobby.getSettings().getDiscussionTimeSeconds() + "с");
+        discussionTime.setCallbackData("settings_discussion_info");
+        discussionRow.add(discussionTime);
+
+        InlineKeyboardButton discussionPlus = new InlineKeyboardButton();
+        discussionPlus.setText("➕");
+        discussionPlus.setCallbackData("settings_discussion_plus");
+        discussionRow.add(discussionPlus);
+        keyboard.add(discussionRow);
+
+        // Время голосования
+        List<InlineKeyboardButton> votingRow = new ArrayList<>();
+        InlineKeyboardButton votingMinus = new InlineKeyboardButton();
+        votingMinus.setText("➖");
+        votingMinus.setCallbackData("settings_voting_minus");
+        votingRow.add(votingMinus);
+
+        InlineKeyboardButton votingTime = new InlineKeyboardButton();
+        votingTime.setText("Голосование: " + lobby.getSettings().getVotingTimeSeconds() + "с");
+        votingTime.setCallbackData("settings_voting_info");
+        votingRow.add(votingTime);
+
+        InlineKeyboardButton votingPlus = new InlineKeyboardButton();
+        votingPlus.setText("➕");
+        votingPlus.setCallbackData("settings_voting_plus");
+        votingRow.add(votingPlus);
+        keyboard.add(votingRow);
+
+        // Перезарядка убийства
+        List<InlineKeyboardButton> killCooldownRow = new ArrayList<>();
+        InlineKeyboardButton killCooldownMinus = new InlineKeyboardButton();
+        killCooldownMinus.setText("➖");
+        killCooldownMinus.setCallbackData("settings_killcooldown_minus");
+        killCooldownRow.add(killCooldownMinus);
+
+        InlineKeyboardButton killCooldown = new InlineKeyboardButton();
+        killCooldown.setText("Перезарядка: " + lobby.getSettings().getKillCooldownSeconds() + "с");
+        killCooldown.setCallbackData("settings_killcooldown_info");
+        killCooldownRow.add(killCooldown);
+
+        InlineKeyboardButton killCooldownPlus = new InlineKeyboardButton();
+        killCooldownPlus.setText("➕");
+        killCooldownPlus.setCallbackData("settings_killcooldown_plus");
+        killCooldownRow.add(killCooldownPlus);
+        keyboard.add(killCooldownRow);
+
+        // Задания на игрока
+        List<InlineKeyboardButton> tasksRow = new ArrayList<>();
+        InlineKeyboardButton tasksMinus = new InlineKeyboardButton();
+        tasksMinus.setText("➖");
+        tasksMinus.setCallbackData("settings_tasks_minus");
+        tasksRow.add(tasksMinus);
+
+        InlineKeyboardButton tasks = new InlineKeyboardButton();
+        tasks.setText("Задания: " + lobby.getSettings().getTasksPerPlayer());
+        tasks.setCallbackData("settings_tasks_info");
+        tasksRow.add(tasks);
+
+        InlineKeyboardButton tasksPlus = new InlineKeyboardButton();
+        tasksPlus.setText("➕");
+        tasksPlus.setCallbackData("settings_tasks_plus");
+        tasksRow.add(tasksPlus);
+        keyboard.add(tasksRow);
 
         // Кнопка "Назад"
         List<InlineKeyboardButton> backRow = new ArrayList<>();
@@ -259,34 +328,147 @@ public class CallbackQueryHandler {
             return;
         }
 
+        boolean settingsChanged = false;
+
         // Обработка различных настроек
         if (data.startsWith("settings_impostor_")) {
             if (data.equals("settings_impostor_plus")) {
-                lobby.getSettings().setImpostorCount(lobby.getSettings().getImpostorCount() + 1);
+                int newValue = lobby.getSettings().getImpostorCount() + 1;
+                lobby.getSettings().setImpostorCount(newValue);
+                settingsChanged = true;
             } else if (data.equals("settings_impostor_minus")) {
-                lobby.getSettings().setImpostorCount(lobby.getSettings().getImpostorCount() - 1);
+                int newValue = lobby.getSettings().getImpostorCount() - 1;
+                lobby.getSettings().setImpostorCount(newValue);
+                settingsChanged = true;
+            }
+        } else if (data.startsWith("settings_discussion_")) {
+            if (data.equals("settings_discussion_plus")) {
+                int newValue = lobby.getSettings().getDiscussionTimeSeconds() + 15;
+                lobby.getSettings().setDiscussionTimeSeconds(newValue);
+                settingsChanged = true;
+            } else if (data.equals("settings_discussion_minus")) {
+                int newValue = lobby.getSettings().getDiscussionTimeSeconds() - 15;
+                lobby.getSettings().setDiscussionTimeSeconds(newValue);
+                settingsChanged = true;
+            }
+        } else if (data.startsWith("settings_voting_")) {
+            if (data.equals("settings_voting_plus")) {
+                int newValue = lobby.getSettings().getVotingTimeSeconds() + 15;
+                lobby.getSettings().setVotingTimeSeconds(newValue);
+                settingsChanged = true;
+            } else if (data.equals("settings_voting_minus")) {
+                int newValue = lobby.getSettings().getVotingTimeSeconds() - 15;
+                lobby.getSettings().setVotingTimeSeconds(newValue);
+                settingsChanged = true;
+            }
+        } else if (data.startsWith("settings_killcooldown_")) {
+            if (data.equals("settings_killcooldown_plus")) {
+                int newValue = lobby.getSettings().getKillCooldownSeconds() + 5;
+                lobby.getSettings().setKillCooldownSeconds(newValue);
+                settingsChanged = true;
+            } else if (data.equals("settings_killcooldown_minus")) {
+                int newValue = lobby.getSettings().getKillCooldownSeconds() - 5;
+                lobby.getSettings().setKillCooldownSeconds(newValue);
+                settingsChanged = true;
+            }
+        } else if (data.startsWith("settings_tasks_")) {
+            if (data.equals("settings_tasks_plus")) {
+                int newValue = lobby.getSettings().getTasksPerPlayer() + 1;
+                lobby.getSettings().setTasksPerPlayer(newValue);
+                settingsChanged = true;
+            } else if (data.equals("settings_tasks_minus")) {
+                int newValue = lobby.getSettings().getTasksPerPlayer() - 1;
+                lobby.getSettings().setTasksPerPlayer(newValue);
+                settingsChanged = true;
+            }
+        } else if (data.equals("settings_back")) {
+            Player player = lobby.getPlayer(userId).orElse(null);
+            if (player != null) {
+                // Принудительно отправляем новое сообщение со статусом вместо редактирования
+                String statusText = buildPlayerStatusText(lobby);
+                InlineKeyboardMarkup markup = createPlayerStatusKeyboard(lobby, player);
+
+                Integer newMessageId = bot.sendMessageWithReturnIdSafe(chatId, statusText, markup);
+                if (newMessageId != null) {
+                    lobby.setStatusMessageId(player.getUserId(), newMessageId);
+                }
+
+                // Удаляем сообщение с настройками
+                try {
+                    bot.deleteMessage(chatId, callbackQuery.getMessage().getMessageId());
+                } catch (Exception e) {
+                    log.error("Error deleting settings message", e);
+                }
+            }
+            return;
+        } else if (data.equals("settings_next")) {
+            // Здесь можно реализовать переключение между различными страницами настроек
+            // Для простоты просто обновляем текущую страницу
+            settingsChanged = true;
+        }
+
+        // Обновляем сообщение с настройками, только если изменения произошли
+        if (settingsChanged) {
+            try {
+                EditMessageText editMessage = new EditMessageText();
+                editMessage.setChatId(chatId);
+                editMessage.setMessageId(callbackQuery.getMessage().getMessageId());
+                editMessage.setText(lobby.getSettings().getFormattedSettings());
+                editMessage.enableMarkdown(true);
+                editMessage.setReplyMarkup(createSettingsKeyboard(lobby));
+                bot.execute(editMessage);
+            } catch (TelegramApiException e) {
+                log.error("Error updating settings message", e);
             }
         }
-        // Добавьте обработку других настроек
+    }
 
-        // Обработка кнопки "Назад"
-        if (data.equals("settings_back")) {
-            updatePlayerStatus(lobby, Objects.requireNonNull(lobby.getPlayer(userId).orElse(null)));
-            return;
+    /**
+     * Строит текст статуса игроков в лобби
+     */
+    private String buildPlayerStatusText(GameLobby lobby) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("👥 *Игроки* (").append(lobby.getPlayers().size()).append("/").append(Config.MAX_PLAYERS).append("):\n");
+        for (Player p : lobby.getPlayers()) {
+            String readyStatus = p.isReady() ? "✅" : "⬜";
+            String ownerLabel = lobby.isOwner(p.getUserId()) ? " 👑" : "";
+            sb.append(readyStatus).append(" ")
+                    .append(p.getDisplayName())
+                    .append(ownerLabel)
+                    .append("\n");
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Создает клавиатуру для статуса игрока
+     */
+    private InlineKeyboardMarkup createPlayerStatusKeyboard(GameLobby lobby, Player player) {
+        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+
+        // Кнопка "Готов" если игрок не готов
+        if (!player.isReady()) {
+            List<InlineKeyboardButton> readyRow = new ArrayList<>();
+            InlineKeyboardButton readyButton = new InlineKeyboardButton();
+            readyButton.setText("Готов");
+            readyButton.setCallbackData("ready");
+            readyRow.add(readyButton);
+            keyboard.add(readyRow);
         }
 
-        // Обновляем сообщение с настройками
-        try {
-            EditMessageText editMessage = new EditMessageText();
-            editMessage.setChatId(chatId);
-            editMessage.setMessageId(callbackQuery.getMessage().getMessageId());
-            editMessage.setText(lobby.getSettings().getFormattedSettings());
-            editMessage.enableMarkdown(true);
-            editMessage.setReplyMarkup(createSettingsKeyboard(lobby));
-            bot.execute(editMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error updating settings message", e);
+        // Если игрок - владелец, добавляем кнопку настроек
+        if (lobby.isOwner(player.getUserId())) {
+            List<InlineKeyboardButton> settingsRow = new ArrayList<>();
+            InlineKeyboardButton settingsButton = new InlineKeyboardButton();
+            settingsButton.setText("⚙️ Настройки");
+            settingsButton.setCallbackData("settings");
+            settingsRow.add(settingsButton);
+            keyboard.add(settingsRow);
         }
+
+        markup.setKeyboard(keyboard);
+        return markup;
     }
 
     /**

@@ -3,7 +3,7 @@ package com.amongus.bot.commands;
 import com.amongus.bot.core.AmongUsBot;
 import com.amongus.bot.core.SessionManager;
 import com.amongus.bot.game.lobby.GameLobby;
-import com.amongus.bot.game.roles.RoleFactory;
+import com.amongus.bot.models.Config;
 import com.amongus.bot.models.Player;
 import com.amongus.bot.utils.SecurityManager;
 import org.slf4j.Logger;
@@ -25,13 +25,6 @@ public class CreateCommand extends BaseCommand {
     private static final Logger log = LoggerFactory.getLogger(CreateCommand.class);
     private final SecurityManager securityManager;
 
-    /**
-     * Creates a new create command.
-     *
-     * @param bot The bot instance
-     * @param sessionManager The session manager
-     * @param securityManager The security manager
-     */
     public CreateCommand(AmongUsBot bot, SessionManager sessionManager, SecurityManager securityManager) {
         super(bot, sessionManager);
         this.securityManager = securityManager;
@@ -69,15 +62,16 @@ public class CreateCommand extends BaseCommand {
         // Создаем новое лобби
         String lobbyCode = sessionManager.createLobby(player);
 
-        // Создаем клавиатуру с кнопкой "Готов"
+        // Создаем клавиатуру с кнопками "Готов" и "Настройки"
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        List<InlineKeyboardButton> row = new ArrayList<>();
+
+        List<InlineKeyboardButton> readyRow = new ArrayList<>();
         InlineKeyboardButton readyButton = new InlineKeyboardButton();
         readyButton.setText("Готов");
         readyButton.setCallbackData("ready");
-        row.add(readyButton);
-        keyboard.add(row);
+        readyRow.add(readyButton);
+        keyboard.add(readyRow);
 
         List<InlineKeyboardButton> settingsRow = new ArrayList<>();
         InlineKeyboardButton settingsButton = new InlineKeyboardButton();
@@ -102,6 +96,54 @@ public class CreateCommand extends BaseCommand {
 
         // Обновляем chat ID игрока в сессии
         sessionManager.updatePlayerChatId(player.getUserId(), chatId);
+
+        // Отправляем сообщение со статусом владельцу лобби
+        Optional<GameLobby> lobbyOpt = sessionManager.getLobbyByCode(lobbyCode);
+        if (lobbyOpt.isPresent()) {
+            GameLobby lobby = lobbyOpt.get();
+
+            // Строим текст со статусом игроков
+            StringBuilder statusSB = new StringBuilder();
+            statusSB.append("👥 *Игроки* (").append(lobby.getPlayers().size()).append("/").append(Config.MAX_PLAYERS).append("):\n");
+
+            // Добавляем только владельца (он единственный в лобби на этом этапе)
+            for (Player p : lobby.getPlayers()) {
+                String readyStatus = p.isReady() ? "✅" : "⬜";
+                String ownerLabel = lobby.isOwner(p.getUserId()) ? " 👑" : "";
+                statusSB.append(readyStatus).append(" ")
+                        .append(p.getDisplayName())
+                        .append(ownerLabel)
+                        .append("\n");
+            }
+
+            // Создаем клавиатуру с кнопками
+            InlineKeyboardMarkup statusMarkup = new InlineKeyboardMarkup();
+            List<List<InlineKeyboardButton>> statusKeyboard = new ArrayList<>();
+
+            // Кнопка "Готов"
+            List<InlineKeyboardButton> statusReadyRow = new ArrayList<>();
+            InlineKeyboardButton statusReadyButton = new InlineKeyboardButton();
+            statusReadyButton.setText("Готов");
+            statusReadyButton.setCallbackData("ready");
+            statusReadyRow.add(statusReadyButton);
+            statusKeyboard.add(statusReadyRow);
+
+            // Кнопка настроек для владельца
+            List<InlineKeyboardButton> statusSettingsRow = new ArrayList<>();
+            InlineKeyboardButton statusSettingsButton = new InlineKeyboardButton();
+            statusSettingsButton.setText("⚙️ Настройки");
+            statusSettingsButton.setCallbackData("settings");
+            statusSettingsRow.add(statusSettingsButton);
+            statusKeyboard.add(statusSettingsRow);
+
+            statusMarkup.setKeyboard(statusKeyboard);
+
+            // Отправляем сообщение со статусом и сохраняем его ID
+            Integer statusMessageId = bot.sendMessageWithReturnIdSafe(chatId, statusSB.toString(), statusMarkup);
+            if (statusMessageId != null) {
+                lobby.setStatusMessageId(player.getUserId(), statusMessageId);
+            }
+        }
 
         // Логируем создание лобби
         log.info("Создано новое лобби с кодом {} игроком {}", lobbyCode, player.getDisplayName());
