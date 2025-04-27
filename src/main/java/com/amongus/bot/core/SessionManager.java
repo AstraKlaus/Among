@@ -32,7 +32,7 @@ public class SessionManager {
     /**
      * Creates a new game lobby and returns its code.
      */
-    public String createLobby(Player owner) {
+    public String createLobby(Player owner, AmongUsBot bot) {
         // First, check if player is already in another lobby
         String existingLobbyCode = playerLobbyMap.get(owner.getUserId());
         if (existingLobbyCode != null) {
@@ -63,6 +63,10 @@ public class SessionManager {
         
         // Associate player with lobby
         playerLobbyMap.put(owner.getUserId(), lobbyCode);
+
+        // Создаем и игровую сессию одновременно
+        GameSession session = new GameSession(lobbyCode, owner, bot.getScheduler(), bot.getSecurityManager());
+        activeSessions.put(lobbyCode, session);
         
         log.info("Created new lobby with code {} owned by {}", lobbyCode, owner.getUserId());
         return lobbyCode;
@@ -103,6 +107,10 @@ public class SessionManager {
         boolean added = lobby.addPlayer(player);
         if (added) {
             playerLobbyMap.put(player.getUserId(), lobbyCode);
+            GameSession session = activeSessions.get(lobbyCode);
+            if (session != null) {
+                session.addPlayer(player);
+            }
             log.info("Player {} joined lobby {}", player.getUserId(), lobbyCode);
         }
         
@@ -230,37 +238,92 @@ public class SessionManager {
 
     public void updatePlayerChatId(long userId, String chatId) {
         log.info("Updating chat ID for user {} to {}", userId, chatId);
-        Player player = getPlayer(userId);
-        if (player != null) {
-            player.setChatId(Long.parseLong(chatId));
-        } else {
-            log.warn("Player with ID {} not found when updating chatId", userId);
+
+        long chatIdLong = Long.parseLong(chatId);
+
+        // Обновляем chatId в игровых сессиях
+        for (GameSession session : activeSessions.values()) {
+            Optional<Player> playerOpt = session.getPlayer(userId);
+            if (playerOpt.isPresent()) {
+                playerOpt.get().setChatId(chatIdLong);
+                log.info("Updated chatId for player {} in session", userId);
+            }
+        }
+
+        // Обновляем chatId в лобби
+        for (GameLobby lobby : lobbies.values()) {
+            Optional<Player> playerOpt = lobby.getPlayer(userId);
+            if (playerOpt.isPresent()) {
+                playerOpt.get().setChatId(chatIdLong);
+                log.info("Updated chatId for player {} in lobby", userId);
+            }
         }
     }
 
     public String getPlayerChatId(long userId) {
-        Player player = getPlayer(userId);
-        if (player != null) {
-            long chatIdLong = player.getChatId();
-            if (chatIdLong == 0) {
-                log.warn("ChatId for player {} is 0!", userId);
+        // Проверяем в сессиях
+        for (GameSession session : activeSessions.values()) {
+            Optional<Player> playerOpt = session.getPlayer(userId);
+            if (playerOpt.isPresent()) {
+                Player player = playerOpt.get();
+                long chatIdLong = player.getChatId();
+                if (chatIdLong != 0) {
+                    return String.valueOf(chatIdLong);
+                }
             }
-            return String.valueOf(chatIdLong);
         }
-        log.warn("No player found for userId {} when getting chatId", userId);
+
+        // Если не нашли в сессиях, проверяем в лобби
+        for (GameLobby lobby : lobbies.values()) {
+            Optional<Player> playerOpt = lobby.getPlayer(userId);
+            if (playerOpt.isPresent()) {
+                Player player = playerOpt.get();
+                long chatIdLong = player.getChatId();
+                if (chatIdLong != 0) {
+                    return String.valueOf(chatIdLong);
+                }
+            }
+        }
+
+        log.warn("No valid chatId found for userId {}", userId);
         return null;
     }
 
-    // Добавить метод startGame
+
+
     public void startGame(String lobbyCode, AmongUsBot bot) {
         log.info("Attempting to start game for lobby: {}", lobbyCode);
+
         GameSession session = activeSessions.get(lobbyCode);
         if (session == null) {
             log.error("Game session not found for lobby: {}", lobbyCode);
-            return;
+
+            // Создаем сессию, если её нет
+            GameLobby lobby = lobbies.get(lobbyCode);
+            if (lobby != null) {
+                session = new GameSession(lobbyCode, lobby.getOwner(),
+                        bot.getScheduler(), bot.getSecurityManager());
+
+                // Копируем всех игроков из лобби
+                for (Player p : lobby.getPlayers()) {
+                    boolean added = session.addPlayer(p);
+                    if (added) {
+                        // Установить chatId с использованием метода класса GameSession
+                        session.setPlayerChatId(p.getUserId(), String.valueOf(p.getChatId()));
+                    }
+                }
+
+                activeSessions.put(lobbyCode, session);
+                log.info("Created new session for lobby: {}", lobbyCode);
+            } else {
+                return;
+            }
         }
+
+        // Теперь запускаем игру
         session.startGame(bot);
     }
+
 
     /**
      * Завершает игровую сессию с указанным кодом лобби.

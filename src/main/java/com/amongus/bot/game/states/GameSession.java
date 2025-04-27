@@ -175,9 +175,15 @@ public class GameSession {
      * Sets the player's chat ID for sending direct messages.
      */
     public void setPlayerChatId(long userId, String chatId) {
-        playerChatIds.put(userId, chatId);
+        if (chatId != null && !chatId.equals("0")) {
+            playerChatIds.put(userId, chatId);
+            log.debug("Set chatId {} for player {}", chatId, userId);
+        } else {
+            log.warn("Attempted to set invalid chatId {} for player {}", chatId, userId);
+        }
     }
-    
+
+
     /**
      * Gets a player's chat ID for sending direct messages.
      */

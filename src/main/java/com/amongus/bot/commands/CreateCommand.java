@@ -42,7 +42,7 @@ public class CreateCommand extends BaseCommand {
 
     @Override
     public void execute(Message message, String args) {
-        String chatId = message.getChatId().toString();
+        String chatId = String.valueOf(message.getFrom().getId());
         User telegramUser = message.getFrom();
         Player player = Player.fromTelegramUser(telegramUser);
 
@@ -60,7 +60,7 @@ public class CreateCommand extends BaseCommand {
         player.updateActivity();
 
         // Создаем новое лобби
-        String lobbyCode = sessionManager.createLobby(player);
+        String lobbyCode = sessionManager.createLobby(player, bot);
 
         // Создаем клавиатуру с кнопками "Готов" и "Настройки"
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
